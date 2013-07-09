@@ -35,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -94,6 +95,26 @@ public class TlsTunnelBuilderTest {
                 + "Host: origin.example.com:9876\r\n"
                 + "User-Agent: java-apns\r\n"
                 + "Proxy-Connection: Keep-Alive\r\n"
+                + "\r\n", request.toString("UTF-8"));
+
+        assertEquals("ORIGIN DATA", TlsTunnelBuilder.readAsciiUntilCrlf(response));
+    }
+
+    @Test
+    public void makeProxyAuth() throws IOException {
+        InputStream response = inputStream("HTTP/1.1 200 OK\r\n" +
+                "Header: Value\r\n" +
+                "Another-Header: Another Value\r\n" +
+                "\r\n" +
+                "ORIGIN DATA\r\n");
+        ByteArrayOutputStream request = new ByteArrayOutputStream();
+        new TlsTunnelBuilder().makeTunnel("origin.example.com", 9876, new ProxyAuth("user", "password"), request, response);
+
+        assertEquals("CONNECT origin.example.com:9876 HTTP/1.1\r\n"
+                + "Host: origin.example.com:9876\r\n"
+                + "User-Agent: java-apns\r\n"
+                + "Proxy-Connection: Keep-Alive\r\n"
+                + "Proxy-Authorization: Basic dXNlcjpwYXNzd29yZA==\r\n"
                 + "\r\n", request.toString("UTF-8"));
 
         assertEquals("ORIGIN DATA", TlsTunnelBuilder.readAsciiUntilCrlf(response));

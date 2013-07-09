@@ -47,14 +47,14 @@ import javax.net.ssl.SSLSocketFactory;
  * not support proxies requiring a "Proxy-Authorization" header.
  */
 public final class TlsTunnelBuilder {
-    public Socket build(SSLSocketFactory factory, Proxy proxy, String host, int port)
+    public Socket build(SSLSocketFactory factory, Proxy proxy, ProxyAuth proxyAuth, String host, int port)
             throws IOException {
         boolean success = false;
         Socket proxySocket = null;
         try {
             InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
             proxySocket = new Socket(proxyAddress.getAddress(), proxyAddress.getPort());
-            makeTunnel(host, port, proxySocket.getOutputStream(), proxySocket.getInputStream());
+            makeTunnel(host, port, proxyAuth, proxySocket.getOutputStream(), proxySocket.getInputStream());
 
             // Handshake with the origin server.
             Socket socket = factory.createSocket(proxySocket, host, port, true /* auto close */);
@@ -68,14 +68,21 @@ public final class TlsTunnelBuilder {
     }
 
     void makeTunnel(String host, int port, OutputStream out, InputStream in) throws IOException {
+        makeTunnel(host, port, null, out, in);
+    }
+
+    void makeTunnel(String host, int port, ProxyAuth proxyAuth, OutputStream out, InputStream in) throws IOException {
         // Send the HTTP CONNECT request.
         String userAgent = "java-apns";
         String connect = String.format("CONNECT %1$s:%2$d HTTP/1.1\r\n"
                 + "Host: %1$s:%2$d\r\n"
                 + "User-Agent: %3$s\r\n"
-                + "Proxy-Connection: Keep-Alive\r\n" // For HTTP/1.0 proxies like Squid.
-                + "\r\n",
+                + "Proxy-Connection: Keep-Alive\r\n", // For HTTP/1.0 proxies like Squid.
                 host, port, userAgent);
+        if (proxyAuth != null) {
+            connect += "Proxy-Authorization: " + proxyAuth.encode() + "\r\n";    // Proxy BASIC authorization.
+        }
+        connect += "\r\n";
         out.write(connect.getBytes("UTF-8"));
 
         // Read the proxy's HTTP response.

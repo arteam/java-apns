@@ -61,6 +61,7 @@ public class ApnsConnectionImpl implements ApnsConnection {
     private final String host;
     private final int port;
     private final Proxy proxy;
+    private final ProxyAuth proxyAuth;
     private final ReconnectPolicy reconnectPolicy;
     private final ApnsDelegate delegate;
     private int cacheLength;
@@ -75,19 +76,19 @@ public class ApnsConnectionImpl implements ApnsConnection {
     public ApnsConnectionImpl(SocketFactory factory, String host,
             int port, ReconnectPolicy reconnectPolicy,
             ApnsDelegate delegate) {
-        this(factory, host, port, null, reconnectPolicy,
+        this(factory, host, port, null, null,reconnectPolicy,
                 delegate);
     }
     
     public ApnsConnectionImpl(SocketFactory factory, String host,
-            int port, Proxy proxy, ReconnectPolicy reconnectPolicy,
+            int port, Proxy proxy, ProxyAuth proxyAuth, ReconnectPolicy reconnectPolicy,
             ApnsDelegate delegate) {
-        this(factory, host, port, proxy, reconnectPolicy,
+        this(factory, host, port, proxy, proxyAuth, reconnectPolicy,
                 delegate, false, ApnsConnection.DEFAULT_CACHE_LENGTH, true);
     }
 
     public ApnsConnectionImpl(SocketFactory factory, String host,
-            int port, Proxy proxy,
+            int port, Proxy proxy, ProxyAuth proxyAuth,
             ReconnectPolicy reconnectPolicy, ApnsDelegate delegate,
             boolean errorDetection, int cacheLength, boolean autoAdjustCacheLength) {
         this.factory = factory;
@@ -96,6 +97,7 @@ public class ApnsConnectionImpl implements ApnsConnection {
         this.reconnectPolicy = reconnectPolicy;
         this.delegate = delegate == null ? ApnsDelegate.EMPTY : delegate;
         this.proxy = proxy;
+        this.proxyAuth = proxyAuth;
         this.errorDetection = errorDetection;
         this.cacheLength = cacheLength;
         this.autoAdjustCacheLength = autoAdjustCacheLength;
@@ -202,7 +204,7 @@ public class ApnsConnectionImpl implements ApnsConnection {
                     socket = factory.createSocket(host, port);
                 } else if (proxy.type() == Proxy.Type.HTTP) {
                     TlsTunnelBuilder tunnelBuilder = new TlsTunnelBuilder();
-                    socket = tunnelBuilder.build((SSLSocketFactory) factory, proxy, host, port);
+                    socket = tunnelBuilder.build((SSLSocketFactory) factory, proxy, proxyAuth, host, port);
                 } else {
                     boolean success = false;
                     Socket proxySocket = null;
@@ -291,14 +293,14 @@ public class ApnsConnectionImpl implements ApnsConnection {
     }
 
     public ApnsConnectionImpl copy() {
-        return new ApnsConnectionImpl(factory, host, port, proxy, reconnectPolicy.copy(),
+        return new ApnsConnectionImpl(factory, host, port, proxy, proxyAuth, reconnectPolicy.copy(),
                 delegate, errorDetection, cacheLength, autoAdjustCacheLength);
     }
 
     public void testConnection() throws NetworkIOException {
         ApnsConnectionImpl testConnection = null;
         try {
-            testConnection = new ApnsConnectionImpl(factory, host, port, proxy, reconnectPolicy.copy(), delegate);
+            testConnection = new ApnsConnectionImpl(factory, host, port, proxy, proxyAuth, reconnectPolicy.copy(), delegate);
             testConnection.sendMessage(new SimpleApnsNotification(new byte[]{0}, new byte[]{0}));
         } finally {
             if (testConnection != null) {

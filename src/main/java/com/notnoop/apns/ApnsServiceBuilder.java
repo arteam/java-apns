@@ -94,6 +94,7 @@ public class ApnsServiceBuilder {
     
     private ApnsDelegate delegate = ApnsDelegate.EMPTY;
     private Proxy proxy = null;
+    private ProxyAuth proxyAuth = null;
     private boolean errorDetection = true;
 
     /**
@@ -536,10 +537,11 @@ public class ApnsServiceBuilder {
         ApnsService service;
 
         SSLSocketFactory sslFactory = sslContext.getSocketFactory();
-        ApnsFeedbackConnection feedback = new ApnsFeedbackConnection(sslFactory, feedbackHost, feedbackPort, proxy);
+        ApnsFeedbackConnection feedback = new ApnsFeedbackConnection(sslFactory, feedbackHost,
+                feedbackPort, proxy, proxyAuth);
 
         ApnsConnection conn = new ApnsConnectionImpl(sslFactory, gatewayHost, 
-                gatewaPort, proxy, reconnectPolicy, 
+                gatewaPort, proxy, proxyAuth, reconnectPolicy,
                 delegate, errorDetection, cacheLength, autoAdjustCacheLength);
         if (pooledMax != 1) {
             conn = new ApnsPooledConnection(conn, pooledMax, executor);
