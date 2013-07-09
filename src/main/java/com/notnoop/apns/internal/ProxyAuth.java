@@ -28,9 +28,8 @@ public class ProxyAuth {
      * @return encoded proxy auth params
      */
     public String encode() {
-        sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
         String auth = username + ":" + password;
-        String encodedAuth = encoder.encode(auth.getBytes());
+        String encodedAuth = Utilities.encode(auth.getBytes());
         return "Basic " + encodedAuth;
     }
 }
