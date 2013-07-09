@@ -7,7 +7,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import org.junit.Test;
 import com.notnoop.apns.PayloadBuilder;
 import com.notnoop.apns.internal.Utilities;
@@ -398,12 +398,11 @@ public class PayloadBuilderTest {
     }
 
     private void assertEqualsJson(final String expected, final String actual) {
-        final ObjectMapper mapper = new ObjectMapper();
+        final Gson mapper = new Gson();
         try {
             @SuppressWarnings("unchecked")
-            final
-            Map<String, Object> exNode = mapper.readValue(expected, Map.class),
-                 acNode = mapper.readValue(actual, Map.class);
+            final Map<String, Object> exNode = mapper.fromJson(expected, Map.class),
+                 acNode = mapper.fromJson(actual, Map.class);
             assertEquals(exNode, acNode);
         } catch (final Exception e) {
             throw new IllegalStateException(e);

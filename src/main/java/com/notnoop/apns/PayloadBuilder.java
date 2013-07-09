@@ -30,19 +30,21 @@
  */
 package com.notnoop.apns;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.notnoop.apns.internal.Utilities;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.notnoop.apns.internal.Utilities;
 
 /**
  * Represents a builder for constructing Payload requests, as
  * specified by Apple Push Notification Programming Guide.
  */
 public final class PayloadBuilder {
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final Gson mapper = new GsonBuilder().serializeNulls().create();
 
     private final Map<String, Object> root;
     private final Map<String, Object> aps;
@@ -238,7 +240,7 @@ public final class PayloadBuilder {
      * payload, and subsequent calls add but doesn't reset the
      * custom fields.
      *
-     * @param map   the custom map
+     * @param values   the custom map
      * @return  this
      */
     public PayloadBuilder customFields(final Map<String, ? extends Object> values) {
@@ -367,7 +369,7 @@ public final class PayloadBuilder {
             root.put("aps", aps);
         }
         try {
-            return mapper.writeValueAsString(root);
+            return mapper.toJson(root);
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
