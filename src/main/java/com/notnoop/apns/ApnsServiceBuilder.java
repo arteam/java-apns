@@ -86,12 +86,12 @@ public class ApnsServiceBuilder {
 
     private ReconnectPolicy reconnectPolicy = ReconnectPolicy.Provided.NEVER.newObject();
     private boolean isQueued = false;
-    
+
     private boolean isBatched = false;
     private int batchWaitTimeInSec;
     private int batchMaxWaitTimeInSec;
     private ThreadFactory batchThreadFactory;
-    
+
     private ApnsDelegate delegate = ApnsDelegate.EMPTY;
     private Proxy proxy = null;
     private ProxyAuth proxyAuth = null;
@@ -182,7 +182,7 @@ public class ApnsServiceBuilder {
      * the `SSLContext` yourself!  Needless to say, the password-protected
      * certificate is most recommended option.
      *
-     * @param stream    the keystore 
+     * @param stream    the keystore
      * @param password  the password of the keystore
      * @return  this
      * @throws InvalidSSLConfig if stream is invalid Keystore
@@ -194,14 +194,14 @@ public class ApnsServiceBuilder {
         return withSSLContext(
                 newSSLContext(keyStore, password, KEY_ALGORITHM));
     }
-    
+
 	private void assertPasswordNotEmpty(String password) {
 		if (password == null || password.length() == 0) {
             throw new IllegalArgumentException("Passwords must be specified." +
                     "Oracle Java SDK does not support passwordless p12 certificates");
         }
 	}
-    
+
     /**
      * Specify the SSLContext that should be used to initiate the
      * connection to Apple Server.
@@ -312,12 +312,12 @@ public class ApnsServiceBuilder {
         this.reconnectPolicy = rp;
         return this;
     }
-    
+
     /**
      * Specify if the notification cache should auto adjust.
      * Default is true
-     * 
-     * @param autoAdjustCacheLength 
+     *
+     * @param autoAdjustCacheLength
      * @return this
      */
     public ApnsServiceBuilder withAutoAdjustCacheLength(boolean autoAdjustCacheLength) {
@@ -372,11 +372,21 @@ public class ApnsServiceBuilder {
         this.proxy = proxy;
         return this;
     }
-    
+
+    /**
+     * Specify the proxy authorization params to establish the connections
+     * @param proxyAuth proxy auth params
+     * @return this
+     */
+    public ApnsServiceBuilder withProxyAuth(ProxyAuth proxyAuth) {
+        this.proxyAuth = proxyAuth;
+        return this;
+    }
+
     /**
      * Specity the number of notifications to cache for error purposes.
      * Default is 100
-     * 
+     *
      * @param cacheLength  Number of notifications to cache for error purposes
      * @return  this
      */
@@ -442,25 +452,25 @@ public class ApnsServiceBuilder {
         this.isQueued = true;
         return this;
     }
-    
+
     /**
      * Construct service which will process notification requests in batch.
      * After each request batch will wait <code>waitTimeInSec (set as 5sec)</code> for more request to come
      * before executing but not more than <code>maxWaitTimeInSec (set as 10sec)</code>
-     * 
+     *
      * Note: It is not recommended to use pooled connection
      */
     public ApnsServiceBuilder asBatched() {
         return asBatched(5, 10);
     }
-    
+
     /**
      * Construct service which will process notification requests in batch.
      * After each request batch will wait <code>waitTimeInSec</code> for more request to come
      * before executing but not more than <code>maxWaitTimeInSec</code>
-     * 
+     *
      * Note: It is not recommended to use pooled connection
-     * 
+     *
      * @param waitTimeInSec
      *            time to wait for more notification request before executing
      *            batch
@@ -470,18 +480,18 @@ public class ApnsServiceBuilder {
     public ApnsServiceBuilder asBatched(int waitTimeInSec, int maxWaitTimeInSec) {
         return asBatched(waitTimeInSec, maxWaitTimeInSec, Executors.defaultThreadFactory());
     }
-    
+
     /**
      * Construct service which will process notification requests in batch.
      * After each request batch will wait <code>waitTimeInSec</code> for more request to come
      * before executing but not more than <code>maxWaitTimeInSec></code>
-     * 
+     *
      * Each batch creates new connection and close it after finished.
-     * In case reconnect policy is specified it will be applied by batch processing. 
+     * In case reconnect policy is specified it will be applied by batch processing.
      * E.g.: {@link ReconnectPolicy.Provided#EVERY_HALF_HOUR} will reconnect the connection in case batch is running for more than half an hour
-     * 
+     *
      * Note: It is not recommended to use pooled connection
-     * 
+     *
      * @param waitTimeInSec
      *            time to wait for more notification request before executing
      *            batch
@@ -497,8 +507,8 @@ public class ApnsServiceBuilder {
         this.batchThreadFactory = threadFactory;
         return this;
     }
-    
-    
+
+
     /**
      * Sets the delegate of the service, that gets notified of the
      * status of message delivery.
@@ -540,7 +550,7 @@ public class ApnsServiceBuilder {
         ApnsFeedbackConnection feedback = new ApnsFeedbackConnection(sslFactory, feedbackHost,
                 feedbackPort, proxy, proxyAuth);
 
-        ApnsConnection conn = new ApnsConnectionImpl(sslFactory, gatewayHost, 
+        ApnsConnection conn = new ApnsConnectionImpl(sslFactory, gatewayHost,
                 gatewaPort, proxy, proxyAuth, reconnectPolicy,
                 delegate, errorDetection, cacheLength, autoAdjustCacheLength);
         if (pooledMax != 1) {
@@ -552,7 +562,7 @@ public class ApnsServiceBuilder {
         if (isQueued) {
             service = new QueuedApnsService(service);
         }
-        
+
         if (isBatched) {
             service = new BatchApnsService(conn, feedback, batchWaitTimeInSec, batchMaxWaitTimeInSec, batchThreadFactory);
         }
